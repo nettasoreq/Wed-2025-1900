@@ -18,5 +18,6 @@ user = st.chat_input("ההודעה שלך...")
 
 if user: #אם יש הודעה
     showMessage("user",user)
+    sendMessage(user) #לשלוח לAI את ההודעה
 
 
