@@ -3,18 +3,27 @@ from dotenv import load_dotenv  #הספריה שפונה לקובץ env
 import os
 import streamlit as st
 from google import genai
+from google.genai import types
+import time
 
-all_models = ["gemini-3-flash",
+def current_time() -> str:  #הולך לחזור משתנה מסוג טקסט
+    """
+    פוקנציה שמחזירה מה התאריך והשעה
+    """
+    return time.ctime() #מחזיר את הזמן עכשיו
+
+all_models = [
               "gemini-2.5-flash",
               "gemini-2.5-flash-lite",
               "gemini-2.0-flash",
               "gemini-2.0-flash-lite",
+             #  "gemini-3-flash",
                ]
 
 def createClient():
     st.session_state.client = genai.Client(api_key=loadAPIKey()) #יוצרים לקוח של ג'מיני
 
-def sendMessage(text,history=[]):
+def sendMessage(text,system_prompt,history=[]):
     if 'client' not in st.session_state: #אם לא יצרת חיבור
         createClient()
 
@@ -22,20 +31,27 @@ def sendMessage(text,history=[]):
         client = st.session_state.client
         try: #מנסה
             chat = client.chats.create( #יוצר צ'אט
-                model = model #מודל מהלולאה
+                model = model,
+                history = history, #ההיסטוריה ששלחנו
+                config = types.GenerateContentConfig (
+                    system_instruction = system_prompt  #ההוראות זה הסיסטם פרומפט
+                )
             )
 
             ai = chat.send_message(text)  #שליחת הודעה
             print(ai.text)  #הדפסת תשובה
             return ai.text #תחזיר את התשובה
         except Exception as e: #לא הצליח
-            error = str(e) #שומרים את השמירה
+            error = str(e) #שומרים את השגיאה
             print(e)
             if "429" in error: #אם הסיבה היא ששלחתי יותר מדי הודעות
                 st.error("שלחת יותר מדי הודעות, בבקשה לנסות מחר")
                 return #צא
             if "503" in error: #המודל עמוס
                 st.info(f"המודל עמוס, ננסה מודל אחר")
+            else:
+                st.info("Error: " + error)
+                return
             print(f"{model} not working...")
 
 
@@ -49,4 +65,20 @@ def showMessage(sender,text):
     newMessage = st.chat_message(sender)
     newMessage.write(text)  # הדמות כותבת
 
+def save_to_history(project,sender,text): #לאיזה פרויקט, מי שלח, מה הוא שלח
+    if project not in st.session_state: #אם לא יצרת את הפרויקט בזיכרון
+        st.session_state[project] = { #צור פרויקט עם היסטוריה ריקה
+            "history": []
+        }
+    st.session_state[project]["history"].append(
+        {
+            "role" : sender,  #מי שלח
+            "parts": [{"text":text }] #הצורה שג'מיני מצפה לקבל בה את ההיטוריה
+        }
+    )
+
+def newPage(project): #פתיחת פרויקט חדש - פועל בפעם הראשונה שנכנסים לדף
+    st.session_state[project] = {  # צור פרויקט עם היסטוריה ריקה
+        "history": []
+    }
 

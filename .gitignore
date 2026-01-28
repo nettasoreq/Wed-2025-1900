@@ -3,4 +3,5 @@ env
 venv
 .venv
 .idea
-code.txt
+homework.txt
+*.txt
