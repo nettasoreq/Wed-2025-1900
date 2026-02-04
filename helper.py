@@ -6,10 +6,28 @@ from google import genai
 from google.genai import types
 import time
 
+from ddgs import DDGS
+
+#פונקציה לחיפוש באינטרנט
+#תקבל מה מחפשים - תחזיר תוצאות - מקבל טקסט ומחזיר טקסט
+def web_search(query : str) -> []:
+    """
+    פונקציה שמחפשת באינטרנט
+    :param query: מה לחפש
+    :return: תוצאות מהאינטרנט
+    """
+    print("search: "+ query)
+
+    with DDGS() as d:
+        results = d.text( query, max_results=3)
+        return results
+
+
 def current_time() -> str:  #הולך לחזור משתנה מסוג טקסט
     """
     פונקציה שמחזירה מה התאריך והשעה
     """
+    print("use tool")
     return time.ctime() #מחזיר את הזמן עכשיו
 
 all_models = [
@@ -34,11 +52,14 @@ def sendMessage(text,system_prompt,history=[]):
                 model = model,
                 history = history, #ההיסטוריה ששלחנו
                 config = types.GenerateContentConfig (
-                    system_instruction = system_prompt  #ההוראות זה הסיסטם פרומפט
+                    system_instruction = system_prompt,  #ההוראות זה הסיסטם פרומפט
+                    tools = [current_time,web_search],
+                    automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=False)
                 )
             )
 
             ai = chat.send_message(text)  #שליחת הודעה
+            print(ai)
             print(ai.text)  #הדפסת תשובה
             return ai.text #תחזיר את התשובה
         except Exception as e: #לא הצליח
