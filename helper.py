@@ -18,10 +18,13 @@ def web_search(query : str) -> []:
     """
     print("search: "+ query)
 
-    with DDGS() as d:
-        results = d.text( query, max_results=3)
-        return results
+    with st.status("search: "+ query):  #הודעה שהוא מחשב - סטטוס
+        with DDGS() as d:
+            results = d.text( query,region="he-il", max_results=3)
+            print(results)
+            return results
 
+#web_search("ISRAEL")
 
 def current_time() -> str:  #הולך לחזור משתנה מסוג טקסט
     """
@@ -41,10 +44,13 @@ all_models = [
 def createClient():
     st.session_state.client = genai.Client(api_key=loadAPIKey()) #יוצרים לקוח של ג'מיני
 
-def sendMessage(text,system_prompt,history=[]):
+def sendMessage(text,system_prompt,history=[], image=None):
     if 'client' not in st.session_state: #אם לא יצרת חיבור
         createClient()
 
+    content = [text]
+    if image: #אם יש תמונה
+        content.append(image) #להוסיף לרשימה
     for model in all_models: #עבור על כל המודלים
         client = st.session_state.client
         try: #מנסה
@@ -58,8 +64,8 @@ def sendMessage(text,system_prompt,history=[]):
                 )
             )
 
-            ai = chat.send_message(text)  #שליחת הודעה
-            print(ai)
+            ai = chat.send_message(content)  #שליחת הודעה
+            #print(ai)
             print(ai.text)  #הדפסת תשובה
             return ai.text #תחזיר את התשובה
         except Exception as e: #לא הצליח
@@ -74,6 +80,7 @@ def sendMessage(text,system_prompt,history=[]):
                 st.info("Error: " + error)
                 return
             print(f"{model} not working...")
+
 
 
 

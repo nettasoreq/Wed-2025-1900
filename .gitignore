@@ -4,4 +4,4 @@ venv
 .venv
 .idea
 homework.txt
-*.txt
+helper.txt
