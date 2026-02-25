@@ -2,7 +2,7 @@ import os #Operating System = מערכת הפעלה = התוכנה ששולטת 
 from dotenv import load_dotenv  #הספריה שפונה לקובץ env
 from google import genai # Generative Ai = בינה מלאכותית יוצרת
 import streamlit as st  #הספרייה של הGUI - הנראות
-
+from helper import * #לטעון את ההלפר
 st.title("הצ'אט שלי") #כותרת
 
 #הגדרות
@@ -11,9 +11,11 @@ st.set_page_config(
     page_icon='👱🏻'
 )
 
-load_dotenv()  #לטעון את הסביבה
+#load_dotenv()  #לטעון את הסביבה
 
-API_KEY = os.getenv("API_KEY") #לטעון את המשתנה
+#API_KEY = os.getenv("API_KEY") #לטעון את המשתנה
+API_KEY = loadAPIKey() #ניקח מההלפר - שיודע להשתמש גם בסודות של סטרימליט
+
 
 #gemini = genai.Client(api_key=API_KEY) #יוצרים לקוח לAPI - שולחים לו את המזהה שלנו
 
