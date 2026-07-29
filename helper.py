@@ -33,18 +33,50 @@ def current_time() -> str:  #הולך לחזור משתנה מסוג טקסט
     print("use tool")
     return time.ctime() #מחזיר את הזמן עכשיו
 
+
+#כלי ליצירת שאלות אמריקאיות
+def ask_questions(question:str,options:list[str]):
+    print("ask_question")
+    """
+    כלי לשאלת שאלות הבהרה - בכל פעם שלא בטוח ורוצה לשאול
+    :param question: השאלה
+    :param options: בין 2-4 אפשרויות
+    :return: הודעת הצלחה
+    """
+    st.session_state["codeAgent"]["question"] = question
+    st.session_state["codeAgent"]["options"] = options
+    st.session_state["codeAgent"]["status"] = "wait"
+    #st.rerun()  #רענון - בלי לשלוח לו תשובה
+    return "השאלה נשלחה למשתמש. המתן לתשובה, אל תעשה כלום בינתיים, עד שהמשתמש יענה לך"
+
+#כלי - מסמן איזה שלב סיימתי
+def mark_step_done(step:str,summary:str,next_step:str) ->str:
+    """
+    כלי שתפקידו לסמן שסיימנו שלב בתהליך
+    :param step: שם השלב במדויק
+    :param summary: תקציר מתומצת של מה שהוחלט ונעשה -
+    :param next_step: שם השלב הבא
+    :return: אישור לעבור שלב
+    """
+    st.session_state["codeAgent"]["steps"][step] = summary
+    st.session_state["codeAgent"]["current_step"] = next_step
+    return "תמשיך לשלב הבא"
+
 all_models = [
-              "gemini-2.5-flash",
-              "gemini-2.5-flash-lite",
-              "gemini-2.0-flash",
-              "gemini-2.0-flash-lite",
-             #  "gemini-3-flash",
-               ]
+    "gemini-3.1-flash-lite", #500 הודעות ביום
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+    #  "gemini-2.0-flash",
+     # "gemini-2.0-flash-lite",
+    "gemini-3-flash",
+    "gemini-3.5-flash",
+    "gemini-3-flash-preview",
+      ]
 
 def createClient():
     st.session_state.client = genai.Client(api_key=loadAPIKey()) #יוצרים לקוח של ג'מיני
 
-def sendMessage(text,system_prompt,history=[], image=None):
+def sendMessage(text,system_prompt,history=[], image=None,tools = []):
     if 'client' not in st.session_state: #אם לא יצרת חיבור
         createClient()
 
@@ -59,7 +91,7 @@ def sendMessage(text,system_prompt,history=[], image=None):
                 history = history, #ההיסטוריה ששלחנו
                 config = types.GenerateContentConfig (
                     system_instruction = system_prompt,  #ההוראות זה הסיסטם פרומפט
-                    tools = [current_time,web_search],
+                    tools = [current_time,web_search] + tools,
                     automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=False)
                 )
             )
